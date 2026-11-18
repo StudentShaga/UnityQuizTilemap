@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Тест: Тайлмапы в 2D-играх</title>
+    <style>
+      :root {
+        --bg1: #1e1b4b;
+        --bg2: #312e81;
+        --pres1: #0f172a;
+        --pres2: #1e293b;
+        --border: rgba(99, 102, 241, 0.3);
+        --h1: #e0e7ff;
+        --h2: #818cf8;
+        --txt: #cbd5e1;
+        --strong: #e0e7ff;
+        --qc-bg: rgba(255, 255, 255, 0.03);
+        --qc-border: rgba(255, 255, 255, 0.08);
+        --qopt-bg: rgba(99, 102, 241, 0.1);
+        --qopt-border: rgba(99, 102, 241, 0.3);
+        --qopt-txt: var(--txt);
+        --gcard-bg: rgba(255, 255, 255, 0.05);
+        --gcard-border: rgba(255, 255, 255, 0.1);
+      }
+      [data-theme="light"] {
+        --bg1: #e0e7ff;
+        --bg2: #c7d2fe;
+        --pres1: #ffffff;
+        --pres2: #f1f5f9;
+        --border: rgba(99, 102, 241, 0.25);
+        --h1: #1e1b4b;
+        --h2: #4f46e5;
+        --txt: #334155;
+        --strong: #0f172a;
+        --qc-bg: rgba(99, 102, 241, 0.05);
+        --qc-border: rgba(99, 102, 241, 0.15);
+        --qopt-bg: #eef2ff;
+        --qopt-border: #c7d2fe;
+        --qopt-txt: #1e293b;
+        --gcard-bg: #f8fafc;
+        --gcard-border: #e2e8f0;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg1));
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+        transition: 0.3s;
+      }
+      .pres {
+        width: 96%;
+        max-width: 1000px;
+        height: 85vh;
+        background: linear-gradient(145deg, var(--pres1), var(--pres2));
+        border-radius: 28px;
+        box-shadow: 0 25px 100px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+        border: 2px solid var(--border);
+        transition: 0.3s;
+      }
+      .slide {
+        padding: 40px 50px 80px;
+        height: 100%;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      h1 {
+        color: var(--h1);
+        font-size: 2.8em;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+      h2 {
+        color: var(--h2);
+        font-size: 2.1em;
+        margin-bottom: 18px;
+        border-bottom: 3px solid #6366f1;
+        padding-bottom: 8px;
+      }
+      p {
+        font-size: 1.2em;
+        line-height: 1.7;
+        color: var(--txt);
+        margin-bottom: 15px;
+      }
+      strong {
+        color: var(--strong);
+      }
+      code {
+        background: rgba(99, 102, 241, 0.2);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-family: "Courier New", monospace;
+        color: #7c3aed;
+      }
+      [data-theme="light"] code {
+        color: #4338ca;
+      }
+      .score-bar {
+        position: absolute;
+        top: 20px;
+        left: 30px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        padding: 9px 22px;
+        border-radius: 30px;
+        color: #fff;
+        font-weight: 700;
+        z-index: 10;
+        font-size: 1.1em;
+      }
+      .slide-counter {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        color: #6366f1;
+        font-weight: 700;
+        background: rgba(99, 102, 241, 0.1);
+        padding: 9px 18px;
+        border-radius: 20px;
+        z-index: 10;
+        font-size: 1.1em;
+      }
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--gcard-bg);
+        border: 2px solid var(--border);
+        color: var(--txt);
+        padding: 9px 18px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 1em;
+        z-index: 10;
+      }
+      .nav {
+        position: absolute;
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 14px;
+        z-index: 10;
+      }
+      .nbtn {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #fff;
+        border: none;
+        padding: 14px 35px;
+        font-size: 1.15em;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      }
+      .nbtn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        opacity: 0.5;
+        box-shadow: none;
+      }
+      .progress {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 6px;
+        background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        z-index: 10;
+        transition: width 0.3s;
+      }
+      .qc {
+        background: var(--qc-bg);
+        padding: 20px;
+        border-radius: 14px;
+        margin: 12px 0;
+        border: 1px solid var(--qc-border);
+      }
+      .qq {
+        color: var(--strong);
+        font-size: 1.3em;
+        font-weight: 600;
+        margin-bottom: 15px;
+      }
+      .qopt {
+        background: var(--qopt-bg);
+        color: var(--qopt-txt);
+        padding: 16px 20px;
+        border-radius: 12px;
+        border: 2px solid var(--qopt-border);
+        cursor: pointer;
+        margin-bottom: 12px;
+        font-size: 1.15em;
+        transition: 0.2s;
+        line-height: 1.5;
+      }
+      .qopt:hover:not(.locked) {
+        filter: brightness(1.1);
+        border-color: #818cf8;
+        transform: translateX(5px);
+      }
+      .qopt.correct {
+        background: rgba(34, 197, 94, 0.3) !important;
+        border-color: #22c55e !important;
+        color: #86efac !important;
+        font-weight: bold;
+      }
+      .qopt.wrong {
+        background: rgba(239, 68, 68, 0.3) !important;
+        border-color: #ef4444 !important;
+        color: #fca5a5 !important;
+      }
+      [data-theme="light"] .qopt.correct {
+        color: #15803d !important;
+      }
+      [data-theme="light"] .qopt.wrong {
+        color: #b91c1c !important;
+      }
+      .qopt.locked {
+        cursor: default;
+        opacity: 0.8;
+      }
+      .info {
+        background: rgba(99, 102, 241, 0.15);
+        border-left: 5px solid #6366f1;
+        padding: 20px;
+        margin: 20px auto;
+        border-radius: 0 12px 12px 0;
+      }
+      .big {
+        font-size: 4em;
+        text-align: center;
+        margin: 10px 0;
+        filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.2));
+      }
+    </style>
+  </head>
+  <body>
+    <div class="pres">
+      <div class="progress" id="pbar" style="width: 0%"></div>
+      <div class="score-bar">⭐ <span id="score">0</span> / 100</div>
+      <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">
+        🌙 Тёмная
+      </button>
+      <div class="slide-counter">
+        <span id="cur">1</span> / <span id="tot"></span>
+      </div>
+      <div class="slide" id="slideArea"></div>
+      <div class="nav">
+        <button class="nbtn" id="prevBtn" onclick="go(-1)">← Назад</button>
+        <button class="nbtn" id="nextBtn" onclick="go(1)">Вперёд →</button>
+      </div>
+    </div>
+    <script>
+      let score = 0;
+      function addScore(p) {
+        score += p;
+        document.getElementById("score").textContent = score;
+      }
+      function uid() {
+        return "x" + Math.random().toString(36).slice(2);
+      }
+
+      // Функция перемешивает варианты ответов, чтобы тест нельзя было пройти просто запомнив кнопки
+      function quizItem(q, opts, c, pts) {
+        const id = uid();
+        const order = opts.map((_, i) => i);
+        for (let k = order.length - 1; k > 0; k--) {
+          const j = Math.floor(Math.random() * (k + 1));
+          [order[k], order[j]] = [order[j], order[k]];
+        }
+        const correctPos = order.indexOf(c);
+        let h = `<div class="qc" id="${id}"><div class="qq">${q}</div>`;
+        order.forEach(
+          (oi, pos) =>
+            (h += `<div class="qopt" onclick="pick('${id}',${pos},${correctPos},${pts},this)">${opts[oi]}</div>`),
+        );
+        return h + "</div>";
+      }
+
+      function pick(id, i, c, pts, el) {
+        const box = document.getElementById(id);
+        if (box.dataset.done) return;
+        box.dataset.done = "1";
+        const opts = box.querySelectorAll(".qopt");
+        opts.forEach((o) => {
+          o.classList.add("locked");
+          o.onclick = null;
+        });
+        if (i === c) {
+          el.classList.add("correct");
+          addScore(pts);
+        } else {
+          el.classList.add("wrong");
+          opts[c].classList.add("correct");
+        }
+      }
+
+      function toggleTheme() {
+        const html = document.documentElement;
+        const isLight = html.getAttribute("data-theme") === "light";
+        html.setAttribute("data-theme", isLight ? "dark" : "light");
+        document.getElementById("themeBtn").textContent = isLight
+          ? "🌙 Тёмная"
+          : "☀️ Светлая";
+      }
+
+      const SLIDES = [
+        // 1. Стартовый экран
+        () => `<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+<div class="big">📝🎮🏆</div><h1>Тест: Тайлмапы в 2D-играх</h1>
+<div class="info" style="max-width:700px;text-align:center;">
+  <p style="margin-bottom:10px;">Вам предстоит ответить на 10 вопросов по настройке тайлмапов, палитр и коллайдеров в Unity.</p>
+  <p style="margin-bottom:10px;">За каждый правильный ответ начисляется <strong>10 очков</strong>.</p>
+  <p>Максимальный балл — <strong>100 очков</strong>.</p>
+</div>
+<p style="color:#6366f1;margin-top:30px;font-weight:bold;font-size:1.3em;">Нажми «Вперёд →», чтобы начать тест!</p></div>`,
+
+        // Вопрос 1
+        () => `<h2>Вопрос 1 из 10</h2>
+<p style="font-size: 1.3em;">Какие два игровых объекта автоматически создаются на сцене, когда вы добавляете свой первый тайлмап?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  ["Grid и Tilemap", "Canvas и Panel", "Sprite и Tilemap Renderer"],
+  0,
+  10,
+)}`,
+
+        // Вопрос 2
+        () => `<h2>Вопрос 2 из 10</h2>
+<p style="font-size: 1.3em;">Что такое тайлмап и за какие функции отвечают компоненты <strong>Tilemap</strong> и <strong>Tilemap Renderer</strong>?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  [
+    "Tilemap отвечает за размещение плиток (тайлов), а Tilemap Renderer — за их отрисовку и порядок сортировки на экране.",
+    "Tilemap управляет физикой столкновений, а Tilemap Renderer — анимацией тайлов.",
+    "Tilemap создает сетку Grid, а Tilemap Renderer автоматически нарезает спрайты.",
+  ],
+  0,
+  10,
+)}`,
+
+        // Вопрос 3
+        () => `<h2>Вопрос 3 из 10</h2>
+<p style="font-size: 1.3em;">Чем по своей сути является <strong>тайл</strong> в движке Unity, после того как мы создаем его из исходной картинки?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  [
+    "Это создаваемый ассет, который просто ссылается на исходные спрайты.",
+    "Это физический дубликат исходного спрайта, который хранится прямо на сцене.",
+    "Это встроенный скрипт, который управляет поведением игрока.",
+  ],
+  0,
+  10,
+)}`,
+
+        // Вопрос 4
+        () => `<h2>Вопрос 4 из 10</h2>
+<p style="font-size: 1.3em;">Для чего необходимо настраивать параметр <strong>Pixels Per Unit</strong> (PPU) у спрайта перед созданием тайлов и от чего зависит его значение?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  [
+    "Чтобы улучшить качество графики и убрать пикселизацию при отдалении камеры.",
+    "Чтобы размер спрайта точно соответствовал размеру ячейки сетки (Cell Size).",
+    "Это необходимо только для того, чтобы на тайл можно было повесить коллайдер.",
+  ],
+  1,
+  10,
+)}`,
+
+        // Вопрос 5
+        () => `<h2>Вопрос 5 из 10</h2>
+<p style="font-size: 1.3em;">Какой тип (Type) нарезки нужно выбрать в меню Slice окна <strong>Sprite Editor</strong>, чтобы разрезать большой спрайт на равные квадраты (например, 64x64)?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  ["Grid By Cell Size", "Automatic", "Grid By Cell Count"],
+  0,
+  10,
+)}`,
+
+        // Вопрос 6
+        () => `<h2>Вопрос 6 из 10</h2>
+<p style="font-size: 1.3em;">Какие горячие клавиши используются для <strong>поворота кисти</strong> по часовой стрелке и её <strong>отражения по оси X</strong> при рисовании тайлами?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  [
+    "Поворот — <code>]</code>, отражение по X — <code>Shift + [</code>",
+    "Поворот — <code>[</code>, отражение по X — <code>Shift + ]</code>",
+    "Поворот — <code>R</code>, отражение по X — <code>X</code>",
+  ],
+  0,
+  10,
+)}`,
+
+        // Вопрос 7
+        () => `<h2>Вопрос 7 из 10</h2>
+<p style="font-size: 1.3em;">Какое значение свойства <strong>Projection</strong> обязательно должно быть установлено у объекта Main Camera для правильного отображения 2D-игры?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  ["Orthographic", "Perspective", "Isometric"],
+  0,
+  10,
+)}`,
+
+        // Вопрос 8
+        () => `<h2>Вопрос 8 из 10</h2>
+<p style="font-size: 1.3em;">В чем заключается неэффективность размещения коллайдера вокруг каждого отдельного тайла, и как эту проблему решает компонент <strong>Composite Collider 2D</strong>?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  [
+    "Отдельные коллайдеры не работают с гравитацией, а Composite включает её для всех объектов.",
+    "Много мелких коллайдеров сильно снижают производительность. Composite объединяет их в один большой контур всей платформы.",
+    "Отдельные коллайдеры слишком большие, а Composite автоматически обрезает их по размеру спрайта.",
+  ],
+  1,
+  10,
+)}`,
+
+        // Вопрос 9
+        () => `<h2>Вопрос 9 из 10</h2>
+<p style="font-size: 1.3em;">Какое значение нужно задать свойству <strong>Body Type</strong> компонента <strong>Rigidbody 2D</strong> у тайлмапа с платформами, чтобы они не падали вниз под воздействием гравитации?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  ["Static", "Dynamic", "Kinematic"],
+  0,
+  10,
+)}`,
+
+        // Вопрос 10
+        () => `<h2>Вопрос 10 из 10</h2>
+<p style="font-size: 1.3em;">Какое значение нужно задать свойству <strong>Collision Detection</strong> компонента Rigidbody 2D, если персонаж или другие быстрые объекты застревают или проваливаются сквозь тонкие края коллайдеров тайлмапа?</p>
+${quizItem(
+  "Выберите верный вариант:",
+  ["Discrete", "Continuous", "Static"],
+  1,
+  10,
+)}`,
+
+        // Финал
+        () => `<div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+<h2 style="text-align:center;border:none;font-size:2.5em;">✨ Тест завершен!</h2>
+<div style="text-align:center;margin-top:20px;padding:40px;background:rgba(99,102,241,.1);border-radius:20px;">
+<p style="font-size:1.6em;color:#fbbf24;margin-bottom:10px;">🏆 Ваш итоговый счёт:</p>
+<p style="font-size:5em;font-weight:bold;color:#60a5fa;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));" id="finalScore">0</p>
+<p style="font-size:1.5em;color:#818cf8;margin-top:20px;font-weight:bold;" id="finalMessage"></p>
+</div>
+<p style="text-align:center;margin-top:30px;color:var(--txt);">Сделайте скриншот этого экрана и отправьте преподавателю.</p>
+</div>`,
+      ];
+
+      let cur = 0;
+      document.getElementById("tot").textContent = SLIDES.length;
+
+      function show(n) {
+        cur = Math.max(0, Math.min(n, SLIDES.length - 1));
+        document.getElementById("slideArea").innerHTML = SLIDES[cur]();
+        document.getElementById("cur").textContent = cur + 1;
+        document.getElementById("prevBtn").disabled = cur === 0;
+        document.getElementById("nextBtn").disabled = cur === SLIDES.length - 1;
+        document.getElementById("pbar").style.width =
+          ((cur + 1) / SLIDES.length) * 100 + "%";
+
+        if (cur === SLIDES.length - 1) {
+          document.getElementById("finalScore").textContent = score;
+          let msg = "";
+          if (score === 100) msg = "Идеально! Вы отлично усвоили тему.";
+          else if (score >= 70)
+            msg = "Хороший результат! Но есть что повторить.";
+          else msg = "Стоит еще раз перечитать конспект перед практикой.";
+          document.getElementById("finalMessage").textContent = msg;
+        }
+      }
+
+      function go(d) {
+        show(cur + d);
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          go(1);
+        }
+        if (e.key === "ArrowLeft") go(-1);
+      });
+      show(0);
+    </script>
+  </body>
+</html>
